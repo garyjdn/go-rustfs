@@ -333,10 +333,6 @@ func TestSitePageUsecase_UpdateBaseline(t *testing.T) {
 }
 ```
 
-## Docker Integration
-
-The module is designed to work with Docker Compose. See `infrastructure/compose/docker-compose.yaml` for the complete setup.
-
 ## Contributing
 
 1. Follow the existing code patterns and SOLID principles
