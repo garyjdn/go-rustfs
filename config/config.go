@@ -6,15 +6,15 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/garyjdn/go-rustfs/types"
 )
 
 // RustFSConfig represents configuration for RustFS client
 type RustFSConfig struct {
 	// Connection settings
 	BaseURL    string `json:"base_url" env:"RUSTFS_BASE_URL"`
-	APIKey     string `json:"api_key" env:"RUSTFS_API_KEY"`
+	AccessKey  string `json:"access_key" env:"RUSTFS_ACCESS_KEY"`
+	SecretKey  string `json:"secret_key" env:"RUSTFS_SECRET_KEY"`
+	Region     string `json:"region" env:"RUSTFS_REGION"`
 	BucketName string `json:"bucket_name" env:"RUSTFS_BUCKET_NAME"`
 
 	// Performance settings
@@ -30,9 +30,6 @@ type RustFSConfig struct {
 	EnableAudit   bool                   `json:"enable_audit" env:"RUSTFS_ENABLE_AUDIT"`
 	AuditService  string                 `json:"audit_service" env:"RUSTFS_AUDIT_SERVICE"`
 	AuditMetadata map[string]interface{} `json:"audit_metadata"`
-
-	// Retry configuration
-	RetryConfig *types.RetryConfig `json:"retry_config"`
 
 	// Security settings
 	EnableEncryption bool     `json:"enable_encryption" env:"RUSTFS_ENABLE_ENCRYPTION"`
@@ -52,7 +49,9 @@ func LoadConfig() *RustFSConfig {
 	config := &RustFSConfig{
 		// Connection defaults
 		BaseURL:    getEnvOrDefault("RUSTFS_BASE_URL", "http://localhost:8080"),
-		APIKey:     getEnvOrDefault("RUSTFS_API_KEY", ""),
+		AccessKey:  getEnvOrDefault("RUSTFS_ACCESS_KEY", ""),
+		SecretKey:  getEnvOrDefault("RUSTFS_SECRET_KEY", ""),
+		Region:     getEnvOrDefault("RUSTFS_REGION", "us-east-1"),
 		BucketName: getEnvOrDefault("RUSTFS_BUCKET_NAME", "default"),
 
 		// Performance defaults
@@ -85,13 +84,6 @@ func LoadConfig() *RustFSConfig {
 		CacheTTL:          getDurationEnvOrDefault("RUSTFS_CACHE_TTL", 1*time.Hour),
 	}
 
-	// Initialize retry config
-	config.RetryConfig = &types.RetryConfig{
-		MaxAttempts: config.RetryCount,
-		Delay:       time.Second,
-		Backoff:     2.0,
-	}
-
 	// Validate configuration
 	if err := config.Validate(); err != nil {
 		panic(fmt.Sprintf("Invalid RustFS configuration: %v", err))
@@ -106,8 +98,12 @@ func (c *RustFSConfig) Validate() error {
 		return fmt.Errorf("RUSTFS_BASE_URL is required")
 	}
 
-	if c.APIKey == "" {
-		return fmt.Errorf("RUSTFS_API_KEY is required")
+	if c.AccessKey == "" {
+		return fmt.Errorf("RUSTFS_ACCESS_KEY is required")
+	}
+
+	if c.SecretKey == "" {
+		return fmt.Errorf("RUSTFS_SECRET_KEY is required")
 	}
 
 	if c.BucketName == "" {
